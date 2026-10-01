@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-host:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/T2TouchBar/T2TouchBar.csproj
+      - run: dotnet build src/T2TouchBar/T2TouchBar.csproj -c Release --no-restore
+      - run: dotnet publish src/T2TouchBar/T2TouchBar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true --no-restore
+
+  linux-bridge:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev
+      - run: make -C bridge

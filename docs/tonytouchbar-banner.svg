@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title description">
+  <title id="title">TonyTouchBar</title>
+  <desc id="description">Apple T2 Touch Bar for Windows, by Tony</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050812"/>
+      <stop offset="1" stop-color="#11172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#27d5ee"/>
+      <stop offset="0.55" stop-color="#7179ff"/>
+      <stop offset="1" stop-color="#d34fc5"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-100%" width="140%" height="300%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="300" rx="28" fill="url(#background)"/>
+  <rect x="54" y="55" width="1092" height="62" rx="18" fill="#080c16" stroke="#28334c" stroke-width="2"/>
+  <rect x="74" y="73" width="170" height="26" rx="9" fill="#142f42"/>
+  <rect x="256" y="73" width="312" height="26" rx="9" fill="#24204a"/>
+  <rect x="580" y="73" width="218" height="26" rx="9" fill="#183b37"/>
+  <rect x="810" y="73" width="146" height="26" rx="9" fill="#3c2039"/>
+  <rect x="968" y="73" width="158" height="26" rx="9" fill="#263044"/>
+  <rect x="68" y="127" width="1064" height="4" rx="2" fill="url(#accent)" filter="url(#glow)"/>
+  <text x="58" y="213" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="62" font-weight="700" letter-spacing="-2">Tony<tspan fill="url(#accent)">TouchBar</tspan></text>
+  <text x="62" y="257" fill="#aab4c8" font-family="Segoe UI, sans-serif" font-size="24" letter-spacing="2">APPLE T2 TOUCH BAR FOR WINDOWS · BY TONY</text>
+</svg>

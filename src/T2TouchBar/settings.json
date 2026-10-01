@@ -1,0 +1,85 @@
+{
+  "wslDistribution": "Ubuntu-24.04",
+  "bridgePath": "/opt/t2touchbar/t2-touchbar-bridge",
+  "refreshMilliseconds": 250,
+  "gamePathMarkers": ["\\XboxGames\\", "\\steamapps\\common\\", "\\Epic Games\\", "\\GOG Games\\"],
+  "profiles": [
+    {
+      "executable": "ForzaHorizon5.exe",
+      "title": "Forza Horizon 5",
+      "accent": "#65278F",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Map", "key": "M" },
+        { "label": "Photo", "key": "P" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "forzahorizon6.exe",
+      "title": "Forza Horizon 6",
+      "accent": "#65278F",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Map", "key": "M" },
+        { "label": "Photo", "key": "P" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "forza_gaming.desktop.x64_release_final.exe",
+      "title": "Forza Motorsport",
+      "accent": "#176477",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Map", "key": "M" },
+        { "label": "Photo", "key": "P" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "NeedForSpeedHeat.exe",
+      "title": "Need for Speed Heat",
+      "accent": "#8E303F",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Map", "key": "M" },
+        { "label": "Camera", "key": "C" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "NeedForSpeedUnbound.exe",
+      "title": "Need for Speed Unbound",
+      "accent": "#8E303F",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Map", "key": "M" },
+        { "label": "Camera", "key": "C" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "SB-Win64-Shipping.exe",
+      "title": "Stellar Blade",
+      "accent": "#176477",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Menu", "key": "TAB" },
+        { "label": "Map", "key": "M" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    },
+    {
+      "executable": "b1-Win64-Shipping.exe",
+      "title": "Black Myth: Wukong",
+      "accent": "#72501F",
+      "shortcuts": [
+        { "label": "Screenshot", "key": "F12" },
+        { "label": "Inventory", "key": "E" },
+        { "label": "Lock", "key": "Q" },
+        { "label": "Pause", "key": "ESCAPE" }
+      ]
+    }
+  ]
+}

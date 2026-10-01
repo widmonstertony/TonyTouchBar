@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  host:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish Windows host
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          dotnet publish src/T2TouchBar/T2TouchBar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:Version=$version -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-host
+          path: |
+            publish/TonyTouchBar.exe
+            publish/settings.json
+
+  bridge:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev
+      - run: make -C bridge
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-bridge
+          path: bridge/t2-touchbar-bridge
+
+  package:
+    needs: [host, bridge]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-host
+          path: payload/app
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-bridge
+          path: payload/bridge
+      - name: Assemble release archive
+        shell: pwsh
+        run: |
+          $name = "TonyTouchBar-${{ github.ref_name }}-win-x64"
+          New-Item -ItemType Directory -Path "$name/scripts" -Force | Out-Null
+          Copy-Item payload/app "$name/app" -Recurse
+          Copy-Item payload/bridge "$name/bridge" -Recurse
+          Copy-Item scripts/Install.ps1,scripts/Setup-Device.ps1,scripts/Uninstall.ps1,scripts/Diagnostics.ps1 "$name/scripts"
+          Copy-Item README.md,LICENSE,THIRD_PARTY_NOTICES.md "$name"
+          Copy-Item bridge/LICENSE "$name/bridge/LICENSE"
+          Get-ChildItem $name -Recurse -File | Sort-Object FullName | ForEach-Object {
+            $relative = [IO.Path]::GetRelativePath((Resolve-Path $name), $_.FullName).Replace('\','/')
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $relative
+          } | Set-Content "$name/SHA256SUMS.txt" -Encoding ascii
+          Compress-Archive $name "$name.zip"
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: true
+          files: |
+            TonyTouchBar-${{ github.ref_name }}-win-x64.zip
