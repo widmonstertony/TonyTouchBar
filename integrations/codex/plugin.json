@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "tonytouchbar-codex-live",
+  "version": "0.2.0",
+  "description": "Shows real Codex lifecycle status on TonyTouchBar.",
+  "author": {
+    "name": "Tony",
+    "url": "https://github.com/widmonstertony/TonyTouchBar"
+  },
+  "homepage": "https://github.com/widmonstertony/TonyTouchBar",
+  "repository": "https://github.com/widmonstertony/TonyTouchBar",
+  "license": "MIT",
+  "keywords": ["codex", "touch-bar", "windows"],
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json",
+      "interface": {
+        "displayName": "TonyTouchBar Codex Live",
+        "shortDescription": "Live Codex status on the Touch Bar",
+        "developerName": "Tony",
+        "category": "Productivity",
+        "capabilities": ["Read"],
+        "websiteURL": "https://github.com/widmonstertony/TonyTouchBar",
+        "brandColor": "#237669"
+      }
+    }
+  }
+}

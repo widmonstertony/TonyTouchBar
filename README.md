@@ -4,7 +4,7 @@
 
 **Apple T2 Touch Bar for Windows — by Tony.**
 
-TonyTouchBar makes the integrated Touch Bar on supported Intel/T2 MacBook Pro models useful in Windows. It follows the foreground app, shows game profiles with shortcuts, and adds a macOS-like media timeline for YouTube and Bilibili.
+TonyTouchBar makes the integrated Touch Bar on supported Intel/T2 MacBook Pro models useful in Windows. It follows what you are doing and becomes a game panel, media timeline, photo toolbar, or live Codex status strip.
 
 > Early preview. The first verified machine is a 2019 16-inch MacBook Pro (`MacBookPro16,1`) with USB device `05ac:8302`. Other T2 Touch Bar models need community testing.
 
@@ -18,6 +18,8 @@ TonyTouchBar makes the integrated Touch Bar on supported Intel/T2 MacBook Pro mo
 - Supports touch buttons and configurable keyboard shortcuts.
 - Uses Windows Global System Media Transport Controls for title, play/pause, ±10 seconds, mute, and a seekable progress bar.
 - Works with YouTube and Bilibili when the browser exposes a Windows media session.
+- Shows real Codex states such as thinking, using tools, waiting for approval, finished, and interrupted.
+- Adds a Photos layout with previous, next, rotate, and delete controls.
 - Starts with Windows and reconnects the Touch Bar to WSL automatically.
 - No telemetry, cloud service, or account.
 
@@ -27,39 +29,33 @@ TonyTouchBar 是 Tony 制作的 Windows Touch Bar 工具。它不要求关闭 Se
 
 目前首先支持并实测的是 2019 款 16 英寸 Intel/T2 MacBook Pro。其他带 T2 Touch Bar 的 Intel MacBook Pro 欢迎测试并提交诊断包。
 
-## Requirements
+## Install — no terminal required
+
+Download **`TonyTouchBar-Setup.exe`** from Releases and double-click it. Setup checks and installs WSL, Ubuntu, usbipd-win, the Linux bridge, TonyTouchBar, and its Windows startup entry.
+
+- If WSL is already enabled, installation normally finishes in one pass.
+- On a new Windows installation, Windows can require one restart while enabling WSL. Setup records its progress and reopens automatically after sign-in.
+- Administrator approval is requested only for Windows components and the one-time USB device share.
+- Secure Boot stays enabled.
+- Codex Live is optional. Codex asks you to review and trust its local hook definition once; Setup cannot and does not bypass that security review.
+
+## Supported hardware
 
 - Windows 11 x64
 - An Intel MacBook Pro with Apple T2 Touch Bar device `05ac:8302`
-- WSL 2 with Ubuntu 24.04
-- [usbipd-win 5.x](https://github.com/dorssel/usbipd-win) ([Microsoft's WSL USB guide](https://learn.microsoft.com/windows/wsl/connect-usb))
-- Secure Boot may remain enabled
 
-Install prerequisites from an Administrator terminal:
+The current hardware-verified model is the 2019 16-inch MacBook Pro (`MacBookPro16,1`). Other Intel/T2 models need community testing.
 
-```powershell
-wsl --install -d Ubuntu-24.04
-winget install --interactive --exact dorssel.usbipd-win
-```
+Advanced users can still download the portable ZIP and run `scripts\Install.ps1` manually.
 
-Inside Ubuntu, install the runtime dependency:
+## Scene-aware layouts
 
-```bash
-sudo apt update
-sudo apt install libusb-1.0-0
-```
+- **Games:** title, real game icon, battery/time, and configurable shortcuts. Forza profiles include screenshot, map, photo mode, and pause.
+- **Video:** title, play/pause, ±10 seconds, mute, and a touch-seekable progress bar through Windows media sessions.
+- **Photos:** previous/next, rotate, and delete controls that follow the Photos app.
+- **Codex Live:** a moving activity strip driven by official lifecycle hooks—not CPU-usage guessing—with distinct states for thinking, working, approval, completion, and interruption.
 
-## Install a release
-
-1. Download and extract `TonyTouchBar-v*-win-x64.zip` from Releases.
-2. Open PowerShell in the extracted folder.
-3. Run:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\Install.ps1
-```
-
-Windows asks for Administrator approval once to share `05ac:8302` with WSL. The share survives reboots; normal starts do not require elevation. The app is installed to `%LOCALAPPDATA%\TonyTouchBar` and registered in the current user's Startup entry.
+See [the product roadmap](docs/ROADMAP.md) for the richer game telemetry, browser, photo workflow, and creator-mode ideas planned next.
 
 The Touch Bar becomes a WSL-owned USB device while TonyTouchBar is active. Windows cannot use it through another driver at the same time.
 
@@ -108,7 +104,7 @@ make -C bridge
 Or create the complete release ZIP from PowerShell 7:
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 0.1.0
+.\scripts\Build-Release.ps1 -Version 0.2.0
 ```
 
 ## Architecture and licensing

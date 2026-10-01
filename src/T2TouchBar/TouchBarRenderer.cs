@@ -15,7 +15,7 @@ internal sealed class TouchBarRenderer : IDisposable
     private int width = 2008;
     private int height = 60;
 
-    public byte[] Render(ForegroundApp app, AppProfile? profile, MediaState media, MediaService mediaService)
+    public byte[] Render(ForegroundApp app, AppProfile? profile, MediaState media, MediaService mediaService, CodexState codex)
     {
         var pixels = new byte[checked(width * height * 4)];
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -31,6 +31,8 @@ internal sealed class TouchBarRenderer : IDisposable
                 DrawProfile(canvas, app, profile);
             else if (media.Available && IsMediaForeground(app.Executable))
                 DrawMedia(canvas, app, media, mediaService);
+            else if (codex.Available && (codex.Active || IsCodexForeground(app.Executable)))
+                DrawCodex(canvas, IsCodexForeground(app.Executable) ? app : ForegroundApp.Empty, codex);
             else
                 DrawDefault(canvas, app);
 
@@ -38,6 +40,44 @@ internal sealed class TouchBarRenderer : IDisposable
         }
         finally { pinned.Free(); }
         return pixels;
+    }
+
+    private void DrawCodex(SKCanvas canvas, ForegroundApp app, CodexState state)
+    {
+        var accent = state.Phase switch
+        {
+            "approval" => new SKColor(226, 151, 44),
+            "complete" => new SKColor(46, 160, 112),
+            "interrupted" => new SKColor(174, 66, 73),
+            _ => new SKColor(35, 118, 105)
+        };
+        DrawIdentity(canvas, app, "Codex", accent, 0, 340);
+
+        var stateRect = new SKRect(350, 5, 875, 55);
+        using var statePaint = new SKPaint { Color = Dim(accent, .55f), IsAntialias = true };
+        canvas.DrawRoundRect(stateRect, 9, 9, statePaint);
+        DrawText(canvas, Fit(state.Label, 300, 20, true), 370, 29, 20, SKColors.White, true);
+        if (!string.IsNullOrWhiteSpace(state.Detail))
+            DrawText(canvas, Fit(state.Detail, 315, 14, false), 370, 47, 14, new SKColor(210, 220, 225), false);
+
+        if (state.Active && state.Phase is "thinking" or "working")
+        {
+            var track = new SKRect(690, 43, 850, 48);
+            using var dim = new SKPaint { Color = Dim(accent, .75f), IsAntialias = true };
+            canvas.DrawRoundRect(track, 3, 3, dim);
+            var fraction = (DateTimeOffset.Now.ToUnixTimeMilliseconds() % 1800) / 1800f;
+            var left = track.Left + (track.Width + 50) * fraction - 50;
+            using var bright = new SKPaint { Color = SKColors.White.WithAlpha(220), IsAntialias = true };
+            canvas.Save();
+            canvas.ClipRect(track);
+            canvas.DrawRoundRect(new SKRect(left, track.Top, left + 50, track.Bottom), 3, 3, bright);
+            canvas.Restore();
+        }
+
+        DrawButton(canvas, 887, 180, "Open Codex", new SKColor(28, 70, 72), _ => Native.FocusProcess("Codex", "ChatGPT"));
+        DrawButton(canvas, 1079, 180, "Copy", new SKColor(42, 50, 65), _ => Native.TapKey("CTRL+C"));
+        DrawButton(canvas, 1271, 180, "Paste", new SKColor(42, 50, 65), _ => Native.TapKey("CTRL+V"));
+        DrawStatus(canvas, 1463);
     }
 
     public void SetDimensions(int newWidth, int newHeight)
@@ -184,6 +224,7 @@ internal sealed class TouchBarRenderer : IDisposable
 
     private void AddHit(SKRect rect, Action<TouchEvent, double> action) { lock (sync) hits.Add(new Hit(rect, action)); }
     private static bool IsMediaForeground(string executable) => executable.Equals("chrome.exe", StringComparison.OrdinalIgnoreCase) || executable.Equals("msedge.exe", StringComparison.OrdinalIgnoreCase) || executable.Equals("firefox.exe", StringComparison.OrdinalIgnoreCase) || executable.Contains("bilibili", StringComparison.OrdinalIgnoreCase);
+    private static bool IsCodexForeground(string executable) => executable.Contains("codex", StringComparison.OrdinalIgnoreCase) || executable.Equals("ChatGPT.exe", StringComparison.OrdinalIgnoreCase);
     private static string FormatTime(TimeSpan value) => value.TotalHours >= 1 ? value.ToString(@"h\:mm\:ss") : value.ToString(@"m\:ss");
     private static SKColor Parse(string value, SKColor fallback) { try { return SKColor.Parse(value); } catch { return fallback; } }
     private static SKColor Dim(SKColor value, float factor) => new((byte)(value.Red * factor), (byte)(value.Green * factor), (byte)(value.Blue * factor), value.Alpha);

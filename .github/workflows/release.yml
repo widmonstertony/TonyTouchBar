@@ -43,6 +43,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
       - uses: actions/download-artifact@v8
         with:
           name: windows-host
@@ -55,9 +58,10 @@ jobs:
         shell: pwsh
         run: |
           $name = "TonyTouchBar-${{ github.ref_name }}-win-x64"
-          New-Item -ItemType Directory -Path "$name/scripts" -Force | Out-Null
+          New-Item -ItemType Directory -Path "$name/scripts","$name/integrations" -Force | Out-Null
           Copy-Item payload/app "$name/app" -Recurse
           Copy-Item payload/bridge "$name/bridge" -Recurse
+          Copy-Item integrations/codex "$name/integrations/codex" -Recurse
           Copy-Item scripts/Install.ps1,scripts/Setup-Device.ps1,scripts/Uninstall.ps1,scripts/Diagnostics.ps1 "$name/scripts"
           Copy-Item README.md,LICENSE,THIRD_PARTY_NOTICES.md "$name"
           Copy-Item bridge/LICENSE "$name/bridge/LICENSE"
@@ -66,9 +70,17 @@ jobs:
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $relative
           } | Set-Content "$name/SHA256SUMS.txt" -Encoding ascii
           Compress-Archive $name "$name.zip"
+          Compress-Archive "$name/app","$name/bridge","$name/integrations" setup-payload.zip
+          $payload = (Resolve-Path setup-payload.zip).Path
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          dotnet publish src/TonyTouchBar.Setup/TonyTouchBar.Setup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:Version=$version -p:SetupPayload="$payload" -o setup
+          $assets = @("$name.zip", "setup/TonyTouchBar-Setup.exe")
+          $assets | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLowerInvariant(), (Split-Path $_ -Leaf) } | Set-Content SHA256SUMS.txt -Encoding ascii
       - uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           prerelease: true
           files: |
+            setup/TonyTouchBar-Setup.exe
             TonyTouchBar-${{ github.ref_name }}-win-x64.zip
+            SHA256SUMS.txt

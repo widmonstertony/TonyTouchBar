@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>TonyTouchBar-Setup</AssemblyName>
+    <RootNamespace>TonyTouchBar.Setup</RootNamespace>
+    <Authors>Tony</Authors>
+    <Company>Tony</Company>
+    <Product>TonyTouchBar Setup</Product>
+    <Description>One-click installer for TonyTouchBar.</Description>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(SetupPayload)')">
+    <EmbeddedResource Include="$(SetupPayload)" LogicalName="TonyTouchBar.Setup.payload.zip" />
+  </ItemGroup>
+</Project>

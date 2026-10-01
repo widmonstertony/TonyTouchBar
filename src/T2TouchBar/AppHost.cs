@@ -5,6 +5,7 @@ internal sealed class AppHost : IDisposable
     private readonly AppConfig config;
     private readonly Action<string> log;
     private readonly MediaService media = new();
+    private readonly CodexStateService codex = new();
     private readonly TouchBarRenderer renderer = new();
     private readonly CancellationTokenSource cancellation = new();
 
@@ -49,7 +50,7 @@ internal sealed class AppHost : IDisposable
                 await media.RefreshAsync();
                 nextMediaRefresh = DateTimeOffset.Now.AddMilliseconds(500);
             }
-            var frame = renderer.Render(app, profile, media.State, media);
+            var frame = renderer.Render(app, profile, media.State, media, codex.Read());
             await bridge.SendFrameAsync(frame, token);
             await Task.Delay(Math.Clamp(config.RefreshMilliseconds, 100, 2000), token);
         }

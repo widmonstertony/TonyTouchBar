@@ -5,6 +5,28 @@
   "gamePathMarkers": ["\\XboxGames\\", "\\steamapps\\common\\", "\\Epic Games\\", "\\GOG Games\\"],
   "profiles": [
     {
+      "executable": "Microsoft.Photos.exe",
+      "title": "Photos",
+      "accent": "#176477",
+      "shortcuts": [
+        { "label": "Previous", "key": "LEFT" },
+        { "label": "Next", "key": "RIGHT" },
+        { "label": "Rotate", "key": "CTRL+R" },
+        { "label": "Delete", "key": "DELETE" }
+      ]
+    },
+    {
+      "executable": "Photos.exe",
+      "title": "Photos",
+      "accent": "#176477",
+      "shortcuts": [
+        { "label": "Previous", "key": "LEFT" },
+        { "label": "Next", "key": "RIGHT" },
+        { "label": "Rotate", "key": "CTRL+R" },
+        { "label": "Delete", "key": "DELETE" }
+      ]
+    },
+    {
       "executable": "ForzaHorizon5.exe",
       "title": "Forza Horizon 5",
       "accent": "#65278F",

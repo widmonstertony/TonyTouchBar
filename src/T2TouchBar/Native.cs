@@ -42,6 +42,7 @@ internal static class Native
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(nint handle, StringBuilder text, int length);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(nint handle, out uint processId);
     [DllImport("user32.dll", SetLastError = true)] private static extern uint SendInput(uint count, Input[] inputs, int size);
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint handle);
     [DllImport("kernel32.dll")] private static extern bool GetSystemPowerStatus(out SystemPowerStatus status);
 
     public static ForegroundApp GetForegroundApp()
@@ -67,15 +68,23 @@ internal static class Native
         return (state.BatteryLifePercent, state.AcLineStatus == 1);
     }
 
-    public static void TapKey(string key)
+    public static void TapKey(string shortcut)
     {
-        if (!TryVirtualKey(key, out var code)) return;
-        var inputs = new[]
-        {
-            new Input { Type = 1, Data = new InputUnion { Keyboard = new KeyboardInput { VirtualKey = code } } },
-            new Input { Type = 1, Data = new InputUnion { Keyboard = new KeyboardInput { VirtualKey = code, Flags = 2 } } }
-        };
+        var codes = shortcut.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => TryVirtualKey(value, out var code) ? code : (ushort)0).ToArray();
+        if (codes.Length == 0 || codes.Any(code => code == 0)) return;
+        var inputs = codes.Select(code => new Input { Type = 1, Data = new InputUnion { Keyboard = new KeyboardInput { VirtualKey = code } } })
+            .Concat(codes.Reverse().Select(code => new Input { Type = 1, Data = new InputUnion { Keyboard = new KeyboardInput { VirtualKey = code, Flags = 2 } } })).ToArray();
         SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Input>());
+    }
+
+    public static void FocusProcess(params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var process = Process.GetProcessesByName(name).FirstOrDefault(item => item.MainWindowHandle != 0);
+            if (process is not null) { SetForegroundWindow(process.MainWindowHandle); return; }
+        }
     }
 
     private static bool TryVirtualKey(string value, out ushort key)
@@ -93,10 +102,14 @@ internal static class Native
         }
         key = value switch
         {
+            "CTRL" or "CONTROL" => 0x11,
+            "SHIFT" => 0x10,
+            "ALT" => 0x12,
             "ESC" or "ESCAPE" => 0x1B,
             "TAB" => 0x09,
             "SPACE" => 0x20,
             "ENTER" => 0x0D,
+            "DELETE" or "DEL" => 0x2E,
             "LEFT" => 0x25,
             "UP" => 0x26,
             "RIGHT" => 0x27,
