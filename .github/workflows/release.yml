@@ -20,7 +20,7 @@ jobs:
         run: |
           $version = '${{ github.ref_name }}'.TrimStart('v')
           dotnet publish src/T2TouchBar/T2TouchBar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:Version=$version -o publish
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-host
           path: |
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev
       - run: make -C bridge
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-bridge
           path: bridge/t2-touchbar-bridge
