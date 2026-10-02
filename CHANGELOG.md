@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.0-preview.1 - 2026-10-02
+
+- Added reliable Codex Live detection from Codex turn history, with exact working and completed states instead of filesystem activity guesses.
+- Fixed Codex Live getting stuck on working after a turn had already completed.
+- Fixed Bilibili desktop playback controls when the app publishes media actions but no timeline; the -10s/+10s buttons now use its registered rewind/fast-forward actions.
+- Improved media-session selection so the foreground player wins when several browsers or media apps are open.
 - Added the first Forza racing dashboard for FH5, FH6, and Forza Motorsport.
 - Shows live gear, speed, RPM shift lights, lap/position, screenshot, and Photo Mode controls from the local Data Out stream.
 - Auto-detects Motorsport and Horizon Car Dash packet layouts and returns to the normal scene when Forza loses focus.

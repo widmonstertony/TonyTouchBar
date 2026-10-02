@@ -50,6 +50,7 @@ internal sealed class AppHost : IDisposable
         {
             var app = Native.GetForegroundApp();
             var profile = config.ResolveProfile(app);
+            media.SetForegroundContext(app.Executable, app.Title);
             if (DateTimeOffset.Now >= nextMediaRefresh)
             {
                 await media.RefreshAsync();

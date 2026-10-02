@@ -1,5 +1,6 @@
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace T2TouchBar;
@@ -10,6 +11,7 @@ internal sealed class FnKeyService : IDisposable
     private readonly SafeFileHandle device;
     private readonly AutoResetEvent signal = new(false);
     private readonly CancellationTokenSource cancellation = new();
+    private readonly KeyboardActivityMonitor keyboardActivity = new();
     private readonly Task listener;
     private DateTimeOffset lastTransition = DateTimeOffset.MinValue;
     private bool disposed;
@@ -34,8 +36,19 @@ internal sealed class FnKeyService : IDisposable
     {
         while (!cancellation.IsCancellationRequested)
         {
-            if (!signal.WaitOne(250)) continue;
+            if (!signal.WaitOne(100))
+            {
+                if (Pressed && DateTimeOffset.UtcNow - lastTransition > TimeSpan.FromSeconds(8))
+                    Pressed = false;
+                continue;
+            }
             if (cancellation.IsCancellationRequested) break;
+
+            var pulseTimestamp = Stopwatch.GetTimestamp();
+            Thread.Sleep(25);
+            if (keyboardActivity.WasActiveNear(pulseTimestamp, TimeSpan.FromMilliseconds(70)))
+                continue;
+
             var now = DateTimeOffset.UtcNow;
             if (now - lastTransition < TimeSpan.FromMilliseconds(75)) continue;
             lastTransition = now;
@@ -51,8 +64,59 @@ internal sealed class FnKeyService : IDisposable
         signal.Set();
         try { listener.Wait(TimeSpan.FromSeconds(1)); } catch { }
         device.Dispose();
+        keyboardActivity.Dispose();
         signal.Dispose();
         cancellation.Dispose();
+    }
+
+    private sealed class KeyboardActivityMonitor : IDisposable
+    {
+        private readonly bool[] state = new bool[256];
+        private readonly CancellationTokenSource cancellation = new();
+        private readonly Task poller;
+        private long lastActivityTimestamp = long.MinValue;
+
+        public KeyboardActivityMonitor()
+        {
+            for (var key = 8; key < state.Length; key++) state[key] = IsDown(key);
+            poller = Task.Run(Poll);
+        }
+
+        public bool WasActiveNear(long timestamp, TimeSpan tolerance)
+        {
+            var activity = Interlocked.Read(ref lastActivityTimestamp);
+            if (activity == long.MinValue) return false;
+            return Math.Abs(activity - timestamp) <= tolerance.TotalSeconds * Stopwatch.Frequency;
+        }
+
+        private async Task Poll()
+        {
+            while (!cancellation.IsCancellationRequested)
+            {
+                for (var key = 8; key < state.Length; key++)
+                {
+                    var down = IsDown(key);
+                    if (down == state[key]) continue;
+                    state[key] = down;
+                    Interlocked.Exchange(ref lastActivityTimestamp, Stopwatch.GetTimestamp());
+                }
+
+                try { await Task.Delay(4, cancellation.Token); }
+                catch (OperationCanceledException) { break; }
+            }
+        }
+
+        private static bool IsDown(int key) => (GetAsyncKeyState(key) & 0x8000) != 0;
+
+        public void Dispose()
+        {
+            cancellation.Cancel();
+            try { poller.Wait(TimeSpan.FromSeconds(1)); } catch { }
+            cancellation.Dispose();
+        }
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int virtualKey);
     }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

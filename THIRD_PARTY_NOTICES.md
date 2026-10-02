@@ -5,6 +5,8 @@ TonyTouchBar is distributed as an aggregate of separately licensed components.
 ## Windows host
 
 - [.NET](https://github.com/dotnet/runtime), MIT license.
+- [Microsoft.Data.Sqlite](https://learn.microsoft.com/dotnet/standard/data/sqlite/), MIT license.
+- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw), Apache-2.0 license; its bundled SQLite library is public domain.
 - [SkiaSharp](https://github.com/mono/SkiaSharp), MIT license.
 - Windows SDK metadata/runtime APIs, subject to Microsoft's applicable license terms.
 

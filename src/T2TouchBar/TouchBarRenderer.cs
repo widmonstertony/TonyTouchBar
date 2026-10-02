@@ -248,11 +248,18 @@ internal sealed class TouchBarRenderer : IDisposable
         var track = new SKRect(872, 10, 1662, 50);
         using var trackPaint = new SKPaint { Color = new SKColor(35, 40, 50), IsAntialias = true };
         canvas.DrawRoundRect(track, 12, 12, trackPaint);
-        var progress = media.Duration.Ticks > 0 ? Math.Clamp((double)media.Position.Ticks / media.Duration.Ticks, 0, 1) : 0;
+        var progress = media.HasTimeline ? Math.Clamp((double)media.Position.Ticks / media.Duration.Ticks, 0, 1) : 0;
         using var fillPaint = new SKPaint { Color = new SKColor(221, 63, 145), IsAntialias = true };
-        canvas.DrawRoundRect(new SKRect(track.Left, track.Top, track.Left + (float)(track.Width * progress), track.Bottom), 12, 12, fillPaint);
-        DrawCentered(canvas, $"{FormatTime(media.Position)} / {FormatTime(media.Duration)}", track, 18, SKColors.White, false);
-        AddHit(track, (touch, value) => { if (touch.Kind is TouchKind.Up) _ = service.SeekAsync(value); });
+        if (media.HasTimeline)
+        {
+            canvas.DrawRoundRect(new SKRect(track.Left, track.Top, track.Left + (float)(track.Width * progress), track.Bottom), 12, 12, fillPaint);
+            DrawCentered(canvas, $"{FormatTime(media.Position)} / {FormatTime(media.Duration)}", track, 18, SKColors.White, false);
+            AddHit(track, (touch, value) => { if (touch.Kind is TouchKind.Up) _ = service.SeekAsync(value); });
+        }
+        else
+        {
+            DrawCentered(canvas, "Tap -10s / +10s to seek", track, 17, SKColors.White, false);
+        }
 
         DrawButton(canvas, 1674, 150, "Mute", new SKColor(75, 48, 57), _ => Native.TapKey("VOLUME_MUTE"));
         DrawStatus(canvas, 1834, compact: true);
