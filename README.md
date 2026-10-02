@@ -56,6 +56,7 @@ Advanced users can still download the portable ZIP and run `scripts\Install.ps1`
 - **Video:** title, play/pause, ±10 seconds, mute, and a touch-seekable progress bar through Windows media sessions.
 - **Photos:** previous/next, rotate, and delete controls that follow the Photos app.
 - **Codex Live:** a moving activity strip driven by official lifecycle hooks—not CPU-usage guessing—with distinct states for thinking, working, approval, completion, and interruption.
+- **Fn controls:** hold the built-in keyboard's Fn key for brightness down/up, F1–F10, and volume down/up. This uses Apple's signed Boot Camp KeyManager and keeps Secure Boot enabled.
 
 See [the product roadmap](docs/ROADMAP.md) for the richer game telemetry, browser, photo workflow, and creator-mode ideas planned next.
 
@@ -71,6 +72,8 @@ Data Out Packet Format: Car Dash (when shown)
 ```
 
 This is a one-time setting per game. The dashboard appears automatically while a configured Forza executable is in the foreground and returns to the normal Touch Bar scene when the game exits or loses focus. To use another port, change `forzaTelemetryPort` in `%LOCALAPPDATA%\TonyTouchBar\settings.json`.
+
+Before telemetry arrives, the dashboard stays useful: it shows the game title and icon, clock, battery, an animated game-mode strip, and a ready indicator instead of a connection warning.
 
 The Touch Bar becomes a WSL-owned USB device while TonyTouchBar is active. Windows cannot use it through another driver at the same time.
 

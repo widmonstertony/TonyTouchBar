@@ -6,6 +6,8 @@
 - Shows live gear, speed, RPM shift lights, lap/position, screenshot, and Photo Mode controls from the local Data Out stream.
 - Auto-detects Motorsport and Horizon Car Dash packet layouts and returns to the normal scene when Forza loses focus.
 - Added a configurable `forzaTelemetryPort` setting, defaulting to UDP `5607`.
+- Added a native Fn overlay with brightness, F1–F10, and volume controls through Apple's Boot Camp KeyManager.
+- Replaced the Forza `DATA OUT` warning with a clock, battery, animated game-mode strip, and ready state.
 
 ## 0.2.0-preview.2 - 2026-10-01
 

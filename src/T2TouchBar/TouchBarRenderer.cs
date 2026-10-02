@@ -16,7 +16,7 @@ internal sealed class TouchBarRenderer : IDisposable
     private int height = 60;
 
     public byte[] Render(ForegroundApp app, AppProfile? profile, MediaState media, MediaService mediaService, CodexState codex,
-        ForzaTelemetryState forza, int forzaPort)
+        ForzaTelemetryState forza, bool fnPressed)
     {
         var pixels = new byte[checked(width * height * 4)];
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -28,10 +28,12 @@ internal sealed class TouchBarRenderer : IDisposable
             canvas.Clear(SKColor.Parse(profile is null ? "#05070A" : "#09070D"));
             lock (sync) hits.Clear();
 
-            if (profile is not null)
+            if (fnPressed)
+                DrawFn(canvas);
+            else if (profile is not null)
             {
                 if (profile.UsesForzaDashboard)
-                    DrawForza(canvas, app, profile, forza, forzaPort);
+                    DrawForza(canvas, app, profile, forza);
                 else
                     DrawProfile(canvas, app, profile);
             }
@@ -115,7 +117,7 @@ internal sealed class TouchBarRenderer : IDisposable
         }
     }
 
-    private void DrawForza(SKCanvas canvas, ForegroundApp app, AppProfile profile, ForzaTelemetryState telemetry, int port)
+    private void DrawForza(SKCanvas canvas, ForegroundApp app, AppProfile profile, ForzaTelemetryState telemetry)
     {
         var accent = Parse(profile.Accent, new SKColor(101, 39, 143));
         DrawIdentity(canvas, app, profile.Title, accent, 0, 420);
@@ -123,12 +125,14 @@ internal sealed class TouchBarRenderer : IDisposable
         var gearRect = new SKRect(430, 5, 550, 55);
         using (var gearPaint = new SKPaint { Color = new SKColor(18, 24, 32), IsAntialias = true })
             canvas.DrawRoundRect(gearRect, 9, 9, gearPaint);
-        DrawCentered(canvas, telemetry.Available ? FormatGear(telemetry.Gear) : "–", gearRect, 36, SKColors.White, true);
+        DrawCentered(canvas, telemetry.Available ? FormatGear(telemetry.Gear) : DateTime.Now.ToString("HH:mm"), gearRect, telemetry.Available ? 36 : 20, SKColors.White, true);
 
         var speedRect = new SKRect(560, 5, 760, 55);
         using (var speedPaint = new SKPaint { Color = new SKColor(13, 31, 42), IsAntialias = true })
             canvas.DrawRoundRect(speedRect, 9, 9, speedPaint);
-        DrawCentered(canvas, telemetry.Available ? $"{telemetry.SpeedKmh:0} km/h" : "--- km/h", speedRect, 25, SKColors.White, true);
+        var (percent, charging) = Native.GetBattery();
+        var idleBattery = percent < 0 ? "电 --%" : $"{(charging ? "充" : "电")} {percent}%";
+        DrawCentered(canvas, telemetry.Available ? $"{telemetry.SpeedKmh:0} km/h" : idleBattery, speedRect, telemetry.Available ? 25 : 20, SKColors.White, true);
 
         var rpmRect = new SKRect(770, 5, 1328, 55);
         using (var rpmBackground = new SKPaint { Color = new SKColor(18, 22, 30), IsAntialias = true })
@@ -140,7 +144,8 @@ internal sealed class TouchBarRenderer : IDisposable
         }
         else
         {
-            DrawCentered(canvas, $"DATA OUT  127.0.0.1:{port}", rpmRect, 18, new SKColor(224, 169, 69), true);
+            DrawIdleStrip(canvas, rpmRect);
+            DrawCentered(canvas, $"{profile.Title.ToUpperInvariant()}  //  GAME MODE", new SKRect(rpmRect.Left, 25, rpmRect.Right, rpmRect.Bottom), 16, SKColors.White, true);
         }
 
         var lapRect = new SKRect(1338, 5, 1588, 55);
@@ -150,7 +155,7 @@ internal sealed class TouchBarRenderer : IDisposable
         var position = telemetry.RacePosition > 0 ? telemetry.RacePosition.ToString() : "–";
         var lapTitle = telemetry.Available
             ? $"L{telemetry.LapNumber + 1}  P{position}  {FormatLap(lap)}"
-            : "LAP  --:--.---";
+            : "READY";
         DrawCentered(canvas, lapTitle, lapRect, 18, SKColors.White, true);
 
         DrawButton(canvas, 1598, 190, "Screenshot", Dim(accent, .72f), _ => Native.TapKey("F12"));
@@ -174,6 +179,42 @@ internal sealed class TouchBarRenderer : IDisposable
             var left = rect.Left + 12 + index * (segmentWidth + gap);
             using var paint = new SKPaint { Color = color, IsAntialias = true };
             canvas.DrawRoundRect(new SKRect(left, 10, left + segmentWidth, 24), 3, 3, paint);
+        }
+    }
+
+    private void DrawIdleStrip(SKCanvas canvas, SKRect rect)
+    {
+        const int segments = 14;
+        var gap = 4f;
+        var segmentWidth = (rect.Width - 24 - gap * (segments - 1)) / segments;
+        var pulse = (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() / 180) % segments;
+        for (var index = 0; index < segments; index++)
+        {
+            var distance = Math.Min(Math.Abs(index - pulse), segments - Math.Abs(index - pulse));
+            var alpha = (byte)Math.Max(42, 210 - distance * 40);
+            var color = index < 8 ? new SKColor(34, 188, 181, alpha) : new SKColor(179, 73, 220, alpha);
+            var left = rect.Left + 12 + index * (segmentWidth + gap);
+            using var paint = new SKPaint { Color = color, IsAntialias = true };
+            canvas.DrawRoundRect(new SKRect(left, 10, left + segmentWidth, 24), 3, 3, paint);
+        }
+    }
+
+    private void DrawFn(SKCanvas canvas)
+    {
+        string[] labels = ["亮 −", "亮 +", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "音 −", "音 +"];
+        string[] actions = ["BRIGHTNESS_DOWN", "BRIGHTNESS_UP", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "VOLUME_DOWN", "VOLUME_UP"];
+        const float gap = 10;
+        var itemWidth = (width - gap * (labels.Length - 1)) / labels.Length;
+        for (var index = 0; index < labels.Length; index++)
+        {
+            var action = actions[index];
+            var color = index < 2 ? new SKColor(38, 55, 72) : index >= 12 ? new SKColor(48, 45, 61) : new SKColor(43, 40, 54);
+            DrawButton(canvas, index * (itemWidth + gap), itemWidth, labels[index], color, _ =>
+            {
+                if (action == "BRIGHTNESS_DOWN") Native.AdjustBrightness(-5);
+                else if (action == "BRIGHTNESS_UP") Native.AdjustBrightness(5);
+                else Native.TapKey(action);
+            });
         }
     }
 

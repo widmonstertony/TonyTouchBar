@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -66,6 +67,19 @@ internal static class Native
     {
         if (!GetSystemPowerStatus(out var state) || state.BatteryLifePercent == 255) return (-1, false);
         return (state.BatteryLifePercent, state.AcLineStatus == 1);
+    }
+
+    public static void AdjustBrightness(int delta)
+    {
+        try
+        {
+            using var levels = new ManagementObjectSearcher("root\\WMI", "SELECT CurrentBrightness FROM WmiMonitorBrightness");
+            var current = levels.Get().Cast<ManagementObject>().Select(item => Convert.ToInt32(item["CurrentBrightness"])).FirstOrDefault();
+            var target = (byte)Math.Clamp(current + delta, 0, 100);
+            using var methods = new ManagementObjectSearcher("root\\WMI", "SELECT * FROM WmiMonitorBrightnessMethods");
+            foreach (ManagementObject item in methods.Get()) item.InvokeMethod("WmiSetBrightness", [1u, target]);
+        }
+        catch { }
     }
 
     public static void TapKey(string shortcut)
