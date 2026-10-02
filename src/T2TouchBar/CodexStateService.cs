@@ -63,29 +63,33 @@ internal sealed class CodexStateService
         {
             var database = Path.Combine(codexHome, "thread_history_1.sqlite");
             if (!File.Exists(database)) return false;
+            var backgroundThreads = LoadBackgroundThreadIds();
             using var connection = new SqliteConnection($"Data Source={database};Mode=ReadOnly;Cache=Shared");
             connection.Open();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                WITH latest AS (
-                    SELECT status, started_at, completed_at,
-                           ROW_NUMBER() OVER (PARTITION BY thread_id ORDER BY started_at DESC) AS row_number
-                    FROM thread_turns
-                    WHERE started_at >= $cutoff
-                )
-                SELECT status, started_at, completed_at
-                FROM latest
-                WHERE row_number = 1
-                ORDER BY CASE WHEN status = 'inProgress' THEN 0 ELSE 1 END,
-                         COALESCE(completed_at, started_at) DESC
-                LIMIT 1;
+                SELECT thread_id, status, started_at, completed_at
+                FROM thread_turns
+                WHERE started_at >= $cutoff
+                ORDER BY started_at DESC
+                LIMIT 64;
                 """;
             command.Parameters.AddWithValue("$cutoff", DateTimeOffset.Now.AddHours(-24).ToUnixTimeSeconds());
             using var reader = command.ExecuteReader();
-            if (!reader.Read()) return false;
-            var status = reader.GetString(0);
-            var started = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1));
-            var completed = reader.IsDBNull(2) ? started : DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(2));
+            string? status = null;
+            long startedSeconds = 0;
+            long? completedSeconds = null;
+            while (reader.Read())
+            {
+                if (backgroundThreads.Contains(reader.GetString(0))) continue;
+                status = reader.GetString(1);
+                startedSeconds = reader.GetInt64(2);
+                completedSeconds = reader.IsDBNull(3) ? null : reader.GetInt64(3);
+                break;
+            }
+            if (status is null) return false;
+            var started = DateTimeOffset.FromUnixTimeSeconds(startedSeconds);
+            var completed = completedSeconds.HasValue ? DateTimeOffset.FromUnixTimeSeconds(completedSeconds.Value) : started;
             if (status == "inProgress")
                 state = new CodexState(true, true, "working", "Codex is working", "Processing", started);
             else
@@ -97,6 +101,24 @@ internal sealed class CodexStateService
             return true;
         }
         catch { return false; }
+    }
+
+    private HashSet<string> LoadBackgroundThreadIds()
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var database = Path.Combine(codexHome, "state_5.sqlite");
+            if (!File.Exists(database)) return result;
+            using var connection = new SqliteConnection($"Data Source={database};Mode=ReadOnly;Cache=Shared");
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT id FROM threads WHERE source LIKE '%subagent%'";
+            using var reader = command.ExecuteReader();
+            while (reader.Read()) result.Add(reader.GetString(0));
+        }
+        catch { }
+        return result;
     }
 
     private static string ResolveCodexHome()

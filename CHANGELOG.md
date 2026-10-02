@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.0-preview.2 - 2026-10-02
+
+- Fixed stale unfinished or background Codex turns keeping Codex Live in the working state after the foreground turn completed.
+
 ## 0.3.0-preview.1 - 2026-10-02
 
 - Added reliable Codex Live detection from Codex turn history, with exact working and completed states instead of filesystem activity guesses.
