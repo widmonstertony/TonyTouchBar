@@ -2,6 +2,7 @@
   "wslDistribution": "Ubuntu-24.04",
   "bridgePath": "/opt/t2touchbar/t2-touchbar-bridge",
   "refreshMilliseconds": 250,
+  "forzaTelemetryPort": 5607,
   "gamePathMarkers": ["\\XboxGames\\", "\\steamapps\\common\\", "\\Epic Games\\", "\\GOG Games\\"],
   "profiles": [
     {
@@ -30,6 +31,7 @@
       "executable": "ForzaHorizon5.exe",
       "title": "Forza Horizon 5",
       "accent": "#65278F",
+      "dashboard": "forza",
       "shortcuts": [
         { "label": "Screenshot", "key": "F12" },
         { "label": "Map", "key": "M" },
@@ -41,6 +43,7 @@
       "executable": "forzahorizon6.exe",
       "title": "Forza Horizon 6",
       "accent": "#65278F",
+      "dashboard": "forza",
       "shortcuts": [
         { "label": "Screenshot", "key": "F12" },
         { "label": "Map", "key": "M" },
@@ -52,6 +55,7 @@
       "executable": "forza_gaming.desktop.x64_release_final.exe",
       "title": "Forza Motorsport",
       "accent": "#176477",
+      "dashboard": "forza",
       "shortcuts": [
         { "label": "Screenshot", "key": "F12" },
         { "label": "Map", "key": "M" },

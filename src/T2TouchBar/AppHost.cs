@@ -6,6 +6,7 @@ internal sealed class AppHost : IDisposable
     private readonly Action<string> log;
     private readonly MediaService media = new();
     private readonly CodexStateService codex = new();
+    private readonly ForzaTelemetryService forza;
     private readonly TouchBarRenderer renderer = new();
     private readonly CancellationTokenSource cancellation = new();
 
@@ -13,6 +14,7 @@ internal sealed class AppHost : IDisposable
     {
         this.config = config;
         this.log = log;
+        forza = new ForzaTelemetryService(config.ForzaTelemetryPort, log);
         AppDomain.CurrentDomain.ProcessExit += (_, _) => cancellation.Cancel();
         Console.CancelKeyPress += (_, args) => { args.Cancel = true; cancellation.Cancel(); };
     }
@@ -50,9 +52,10 @@ internal sealed class AppHost : IDisposable
                 await media.RefreshAsync();
                 nextMediaRefresh = DateTimeOffset.Now.AddMilliseconds(500);
             }
-            var frame = renderer.Render(app, profile, media.State, media, codex.Read());
+            var frame = renderer.Render(app, profile, media.State, media, codex.Read(), forza.State, config.ForzaTelemetryPort);
             await bridge.SendFrameAsync(frame, token);
-            await Task.Delay(Math.Clamp(config.RefreshMilliseconds, 100, 2000), token);
+            var refresh = profile?.UsesForzaDashboard is true ? 100 : Math.Clamp(config.RefreshMilliseconds, 100, 2000);
+            await Task.Delay(refresh, token);
         }
     }
 
@@ -61,6 +64,7 @@ internal sealed class AppHost : IDisposable
         cancellation.Cancel();
         cancellation.Dispose();
         media.Dispose();
+        forza.Dispose();
         renderer.Dispose();
     }
 }

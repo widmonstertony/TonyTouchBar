@@ -11,8 +11,8 @@ TonyTouchBar is designed as a small context surface, not a row of permanent butt
 
 ## v0.3 — games that feel alive
 
-- Forza Data Out receiver for gear, RPM, speed, lap and rev lights. Telemetry stays local.
-- Race layout: game icon/title on the left, gear and RPM in the center, lap/delta and capture controls on the right.
+- ✅ Forza Data Out receiver for gear, RPM, speed, lap and rev lights. Telemetry stays local.
+- ✅ Race layout: game icon/title on the left, gear and RPM in the center, lap/position and capture controls on the right.
 - Photo-mode layout: shutter, hide UI, camera movement presets, exposure/depth-of-field adjustments, and the most recent capture preview where the game exposes reliable controls.
 - Generic game overlay status for capture/recording, battery, temperature and frame pacing, subject to stable public Windows APIs and third-party licensing.
 

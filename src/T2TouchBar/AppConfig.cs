@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace T2TouchBar;
 
@@ -7,6 +8,7 @@ internal sealed class AppConfig
     public string WslDistribution { get; set; } = "Ubuntu-24.04";
     public string BridgePath { get; set; } = "/opt/t2touchbar/t2-touchbar-bridge";
     public int RefreshMilliseconds { get; set; } = 250;
+    public int ForzaTelemetryPort { get; set; } = 5607;
     public List<string> GamePathMarkers { get; set; } = ["\\XboxGames\\", "\\steamapps\\common\\", "\\Epic Games\\", "\\GOG Games\\"];
     public List<AppProfile> Profiles { get; set; } = [];
 
@@ -51,7 +53,13 @@ internal sealed class AppProfile
     public string Executable { get; set; } = "";
     public string Title { get; set; } = "";
     public string Accent { get; set; } = "#5B2A86";
+    public string Dashboard { get; set; } = "";
     public List<ShortcutConfig> Shortcuts { get; set; } = [];
+
+    [JsonIgnore]
+    public bool UsesForzaDashboard => string.Equals(Dashboard, "forza", StringComparison.OrdinalIgnoreCase) ||
+        Executable.Contains("ForzaHorizon", StringComparison.OrdinalIgnoreCase) ||
+        Executable.Equals("forza_gaming.desktop.x64_release_final.exe", StringComparison.OrdinalIgnoreCase);
 }
 
 internal sealed class ShortcutConfig

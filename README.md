@@ -52,11 +52,25 @@ Advanced users can still download the portable ZIP and run `scripts\Install.ps1`
 ## Scene-aware layouts
 
 - **Games:** title, real game icon, battery/time, and configurable shortcuts. Forza profiles include screenshot, map, photo mode, and pause.
+- **Forza dashboard:** live gear, speed, RPM shift lights, lap/position, screenshot, and Photo Mode for FH5, FH6, and Forza Motorsport.
 - **Video:** title, play/pause, ±10 seconds, mute, and a touch-seekable progress bar through Windows media sessions.
 - **Photos:** previous/next, rotate, and delete controls that follow the Photos app.
 - **Codex Live:** a moving activity strip driven by official lifecycle hooks—not CPU-usage guessing—with distinct states for thinking, working, approval, completion, and interruption.
 
 See [the product roadmap](docs/ROADMAP.md) for the richer game telemetry, browser, photo workflow, and creator-mode ideas planned next.
+
+### Enable the Forza dashboard
+
+TonyTouchBar listens for Forza's local Data Out stream on UDP port `5607`. In each Forza title, open the HUD/gameplay options and set:
+
+```text
+Data Out: On
+Data Out IP Address: 127.0.0.1
+Data Out IP Port: 5607
+Data Out Packet Format: Car Dash (when shown)
+```
+
+This is a one-time setting per game. The dashboard appears automatically while a configured Forza executable is in the foreground and returns to the normal Touch Bar scene when the game exits or loses focus. To use another port, change `forzaTelemetryPort` in `%LOCALAPPDATA%\TonyTouchBar\settings.json`.
 
 The Touch Bar becomes a WSL-owned USB device while TonyTouchBar is active. Windows cannot use it through another driver at the same time.
 

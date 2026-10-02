@@ -15,7 +15,8 @@ internal sealed class TouchBarRenderer : IDisposable
     private int width = 2008;
     private int height = 60;
 
-    public byte[] Render(ForegroundApp app, AppProfile? profile, MediaState media, MediaService mediaService, CodexState codex)
+    public byte[] Render(ForegroundApp app, AppProfile? profile, MediaState media, MediaService mediaService, CodexState codex,
+        ForzaTelemetryState forza, int forzaPort)
     {
         var pixels = new byte[checked(width * height * 4)];
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -28,7 +29,12 @@ internal sealed class TouchBarRenderer : IDisposable
             lock (sync) hits.Clear();
 
             if (profile is not null)
-                DrawProfile(canvas, app, profile);
+            {
+                if (profile.UsesForzaDashboard)
+                    DrawForza(canvas, app, profile, forza, forzaPort);
+                else
+                    DrawProfile(canvas, app, profile);
+            }
             else if (media.Available && IsMediaForeground(app.Executable))
                 DrawMedia(canvas, app, media, mediaService);
             else if (codex.Available && (codex.Active || IsCodexForeground(app.Executable)))
@@ -107,6 +113,76 @@ internal sealed class TouchBarRenderer : IDisposable
             DrawButton(canvas, x, 190, shortcut.Label, Dim(accent, .72f), _ => Native.TapKey(key));
             x += 198;
         }
+    }
+
+    private void DrawForza(SKCanvas canvas, ForegroundApp app, AppProfile profile, ForzaTelemetryState telemetry, int port)
+    {
+        var accent = Parse(profile.Accent, new SKColor(101, 39, 143));
+        DrawIdentity(canvas, app, profile.Title, accent, 0, 420);
+
+        var gearRect = new SKRect(430, 5, 550, 55);
+        using (var gearPaint = new SKPaint { Color = new SKColor(18, 24, 32), IsAntialias = true })
+            canvas.DrawRoundRect(gearRect, 9, 9, gearPaint);
+        DrawCentered(canvas, telemetry.Available ? FormatGear(telemetry.Gear) : "–", gearRect, 36, SKColors.White, true);
+
+        var speedRect = new SKRect(560, 5, 760, 55);
+        using (var speedPaint = new SKPaint { Color = new SKColor(13, 31, 42), IsAntialias = true })
+            canvas.DrawRoundRect(speedRect, 9, 9, speedPaint);
+        DrawCentered(canvas, telemetry.Available ? $"{telemetry.SpeedKmh:0} km/h" : "--- km/h", speedRect, 25, SKColors.White, true);
+
+        var rpmRect = new SKRect(770, 5, 1328, 55);
+        using (var rpmBackground = new SKPaint { Color = new SKColor(18, 22, 30), IsAntialias = true })
+            canvas.DrawRoundRect(rpmRect, 9, 9, rpmBackground);
+        if (telemetry.Available)
+        {
+            DrawRpmStrip(canvas, rpmRect, telemetry.CurrentEngineRpm, telemetry.EngineMaxRpm);
+            DrawCentered(canvas, $"{telemetry.CurrentEngineRpm:0} RPM", new SKRect(rpmRect.Left, 26, rpmRect.Right, rpmRect.Bottom), 16, SKColors.White, true);
+        }
+        else
+        {
+            DrawCentered(canvas, $"DATA OUT  127.0.0.1:{port}", rpmRect, 18, new SKColor(224, 169, 69), true);
+        }
+
+        var lapRect = new SKRect(1338, 5, 1588, 55);
+        using (var lapPaint = new SKPaint { Color = new SKColor(22, 35, 45), IsAntialias = true })
+            canvas.DrawRoundRect(lapRect, 9, 9, lapPaint);
+        var lap = telemetry.CurrentLapSeconds > 0 ? telemetry.CurrentLapSeconds : telemetry.LastLapSeconds;
+        var position = telemetry.RacePosition > 0 ? telemetry.RacePosition.ToString() : "–";
+        var lapTitle = telemetry.Available
+            ? $"L{telemetry.LapNumber + 1}  P{position}  {FormatLap(lap)}"
+            : "LAP  --:--.---";
+        DrawCentered(canvas, lapTitle, lapRect, 18, SKColors.White, true);
+
+        DrawButton(canvas, 1598, 190, "Screenshot", Dim(accent, .72f), _ => Native.TapKey("F12"));
+        var photoKey = profile.Shortcuts.FirstOrDefault(item => item.Label.Contains("Photo", StringComparison.OrdinalIgnoreCase))?.Key ?? "P";
+        DrawButton(canvas, 1798, 200, "Photo Mode", new SKColor(97, 39, 99), _ => Native.TapKey(photoKey));
+    }
+
+    private void DrawRpmStrip(SKCanvas canvas, SKRect rect, float rpm, float maxRpm)
+    {
+        const int segments = 14;
+        var ratio = maxRpm > 0 ? Math.Clamp(rpm / maxRpm, 0, 1.1f) : 0;
+        var flashOff = ratio >= .94f && (DateTimeOffset.Now.ToUnixTimeMilliseconds() / 80) % 2 == 0;
+        var gap = 4f;
+        var segmentWidth = (rect.Width - 24 - gap * (segments - 1)) / segments;
+        for (var index = 0; index < segments; index++)
+        {
+            var threshold = .52f + index * (.45f / (segments - 1));
+            var lit = ratio >= threshold && !flashOff;
+            var color = index < 8 ? new SKColor(25, 196, 158) : index < 11 ? new SKColor(241, 183, 53) : new SKColor(235, 68, 78);
+            if (!lit) color = new SKColor((byte)(color.Red / 5), (byte)(color.Green / 5), (byte)(color.Blue / 5));
+            var left = rect.Left + 12 + index * (segmentWidth + gap);
+            using var paint = new SKPaint { Color = color, IsAntialias = true };
+            canvas.DrawRoundRect(new SKRect(left, 10, left + segmentWidth, 24), 3, 3, paint);
+        }
+    }
+
+    private static string FormatGear(byte gear) => gear switch { 0 => "R", 11 => "N", > 11 => "–", _ => gear.ToString() };
+    private static string FormatLap(float seconds)
+    {
+        if (seconds <= 0) return "--:--.---";
+        var value = TimeSpan.FromSeconds(seconds);
+        return value.TotalHours >= 1 ? value.ToString(@"h\:mm\:ss\.fff") : value.ToString(@"m\:ss\.fff");
     }
 
     private void DrawDefault(SKCanvas canvas, ForegroundApp app)

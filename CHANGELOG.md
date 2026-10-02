@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added the first Forza racing dashboard for FH5, FH6, and Forza Motorsport.
+- Shows live gear, speed, RPM shift lights, lap/position, screenshot, and Photo Mode controls from the local Data Out stream.
+- Auto-detects Motorsport and Horizon Car Dash packet layouts and returns to the normal scene when Forza loses focus.
+- Added a configurable `forzaTelemetryPort` setting, defaulting to UDP `5607`.
+
 ## 0.2.0-preview.2 - 2026-10-01
 
 - Fixed a black Touch Bar after Windows lock/unlock, sleep, or a USB reset.
