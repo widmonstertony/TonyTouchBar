@@ -193,8 +193,10 @@ int main(void) {
     int touch_claimed = 0;
     result = open_touchbar(&device, &width, &height, &touch_claimed);
     if (result) { libusb_exit(NULL); return 11; }
-    uint8_t ready[12] = {'T','B','R','1'};
-    write_u32(ready + 4, width); write_u32(ready + 8, height); fwrite(ready, 1, sizeof ready, stdout);
+    /* Keep startup control traffic line-oriented. WSL can delay the first
+       binary stdout write after a Windows lock/unlock or USB reset even when
+       later frame acknowledgements work normally. */
+    fprintf(stderr, "READY %u %u\n", width, height);
 
     struct touch_state state = {.device = device, .width = width, .height = height, .running = touch_claimed};
     pthread_t touch_thread;

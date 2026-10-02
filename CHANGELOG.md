@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-preview.2 - 2026-10-01
+
+- Fixed a black Touch Bar after Windows lock/unlock, sleep, or a USB reset.
+- Added automatic USB/IP reattachment and a bounded two-stage bridge recovery path.
+- Detects and clears stale WSL bridge processes, including the rare uninterruptible USB state.
+- Replaced the startup binary handshake with a lock-safe line handshake while keeping binary frame acknowledgements.
+- Reuses a healthy existing attachment for faster normal startup.
+
 ## 0.2.0-preview.1 - 2026-10-01
 
 - Added a one-file graphical installer that automates WSL, Ubuntu, usbipd-win, device sharing, the Linux bridge, startup registration, and optional Codex integration.

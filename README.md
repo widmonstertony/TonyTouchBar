@@ -21,6 +21,7 @@ TonyTouchBar makes the integrated Touch Bar on supported Intel/T2 MacBook Pro mo
 - Shows real Codex states such as thinking, using tools, waiting for approval, finished, and interrupted.
 - Adds a Photos layout with previous, next, rotate, and delete controls.
 - Starts with Windows and reconnects the Touch Bar to WSL automatically.
+- Recovers automatically after Windows lock/unlock, sleep, and USB device resets.
 - No telemetry, cloud service, or account.
 
 ## 中文速览
